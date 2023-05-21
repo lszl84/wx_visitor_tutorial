@@ -8,8 +8,8 @@
 
 #include "myapp.h"
 
-#include "colorpane.h"
-#include "pensizepane.h"
+#include "panes/colorpane.h"
+#include "panes/pensizepane.h"
 
 #include "drawingcanvas.h"
 #include "drawingdocument.h"
