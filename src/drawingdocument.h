@@ -4,7 +4,7 @@
 #include <wx/stdstream.h>
 
 #include "xmlserializer.h"
-#include "path.h"
+#include "shapes/path.h"
 
 #include <iostream>
 

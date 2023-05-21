@@ -7,7 +7,7 @@
 
 #include <memory>
 
-#include "path.h"
+#include "shapes/path.h"
 
 struct XmlSerializer
 {

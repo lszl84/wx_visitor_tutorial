@@ -3,7 +3,6 @@
 #include <wx/wx.h>
 #include <vector>
 
-#include "path.h"
 #include "drawingview.h"
 
 class DrawingCanvas : public wxWindow
