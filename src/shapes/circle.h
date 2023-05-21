@@ -29,34 +29,8 @@ struct Circle : Shape
         radius = std::sqrt(std::pow(currentDragPoint.x - center.m_x, 2) + std::pow(currentDragPoint.y - center.m_y, 2));
     }
 
-    wxXmlNode *Serialize() const override
+    void Accept(ShapeVisitor &visitor) const override
     {
-        wxXmlNode *mainNode = new wxXmlNode(wxXML_ELEMENT_NODE, SerializationNodeName());
-        mainNode->AddAttribute("type", SerializationNodeType());
-        mainNode->AddAttribute("color", color.GetAsString(wxC2S_HTML_SYNTAX));
-        mainNode->AddAttribute("radius", wxString::FromDouble(radius));
-
-        wxXmlNode *centerNode = new wxXmlNode(wxXML_ELEMENT_NODE, "Center");
-        centerNode->AddAttribute("x", wxString::FromDouble(center.m_x));
-        centerNode->AddAttribute("y", wxString::FromDouble(center.m_y));
-
-        mainNode->AddChild(centerNode);
-
-        return mainNode;
-    }
-
-    void Deserialize(const wxXmlNode *node) override
-    {
-        color.Set(node->GetAttribute("color"));
-        radius = wxAtof(node->GetAttribute("radius"));
-
-        const wxXmlNode *centerNode = node->GetChildren();
-        center.m_x = wxAtof(centerNode->GetAttribute("x"));
-        center.m_y = wxAtof(centerNode->GetAttribute("y"));
-    }
-
-    static wxString SerializationNodeType()
-    {
-        return "Circle";
+        return visitor.Visit(*this);
     }
 };
