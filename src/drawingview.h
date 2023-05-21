@@ -24,7 +24,4 @@ public:
     DrawingDocument *GetDocument() const;
 
     wxDECLARE_DYNAMIC_CLASS(DrawingView);
-
-private:
-    void AddPointToCurrentSquiggle(wxPoint);
 };

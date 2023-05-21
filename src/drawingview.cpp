@@ -1,10 +1,12 @@
 #include <wx/graphics.h>
 
+#include <memory>
+
 #include "drawingview.h"
 #include "myapp.h"
 #include "drawingcanvas.h"
 
-#include <memory>
+#include "shapefactory.h"
 
 wxIMPLEMENT_DYNAMIC_CLASS(DrawingView, wxView);
 
@@ -49,34 +51,23 @@ void DrawingView::OnDraw(wxDC *dc)
 
     if (gc)
     {
-        auto squiggles = GetDocument()->squiggles;
-        for (const auto &s : squiggles)
+        for (const auto &s : GetDocument()->shapes)
         {
-            auto pointsVector = s.points;
-            if (pointsVector.size() > 1)
-            {
-                gc->SetPen(wxPen(
-                    s.color,
-                    s.width));
-                gc->StrokeLines(pointsVector.size(), pointsVector.data());
-            }
+            s->Draw(*gc);
         }
     }
 }
 
 void DrawingView::OnMouseDown(wxPoint pt)
 {
-    auto currentColor = MyApp::GetToolSettings().currentColor;
-    auto currentWidth = MyApp::GetToolSettings().currentWidth;
-
-    GetDocument()->squiggles.push_back({{}, currentColor, currentWidth});
-
-    AddPointToCurrentSquiggle(pt);
+    GetDocument()->shapes.push_back(ShapeFactory::Create(MyApp::GetToolSettings(), pt));
+    GetDocument()->Modify(true);
 }
 
 void DrawingView::OnMouseDrag(wxPoint pt)
 {
-    AddPointToCurrentSquiggle(pt);
+    GetDocument()->shapes.back()->HandleCreationByMouseDrag(pt);
+    GetDocument()->Modify(true);
 }
 
 void DrawingView::OnMouseDragEnd()
@@ -86,15 +77,7 @@ void DrawingView::OnMouseDragEnd()
 
 void DrawingView::OnClear()
 {
-    GetDocument()->squiggles.clear();
-    GetDocument()->Modify(true);
-}
-
-void DrawingView::AddPointToCurrentSquiggle(wxPoint pt)
-{
-    auto &currentSquiggle = GetDocument()->squiggles.back();
-
-    currentSquiggle.points.push_back(pt);
+    GetDocument()->shapes.clear();
     GetDocument()->Modify(true);
 }
 
