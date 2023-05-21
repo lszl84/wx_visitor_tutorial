@@ -32,4 +32,44 @@ struct Path : Shape
     {
         points.push_back(wxPoint2DDouble(currentDragPoint.x, currentDragPoint.y));
     }
+
+    wxXmlNode *Serialize() const override
+    {
+        wxXmlNode *mainNode = new wxXmlNode(wxXML_ELEMENT_NODE, SerializationNodeName());
+
+        mainNode->AddAttribute("type", SerializationNodeType());
+        mainNode->AddAttribute("color", color.GetAsString(wxC2S_HTML_SYNTAX));
+        mainNode->AddAttribute("width", wxString::FromDouble(width));
+
+        for (const auto &point : points)
+        {
+            wxXmlNode *pointNode = new wxXmlNode(wxXML_ELEMENT_NODE, "Point");
+            pointNode->AddAttribute("x", wxString::FromDouble(point.m_x));
+            pointNode->AddAttribute("y", wxString::FromDouble(point.m_y));
+            mainNode->AddChild(pointNode);
+        }
+
+        return mainNode;
+    }
+
+    void Deserialize(const wxXmlNode *node) override
+    {
+        color = wxColor(node->GetAttribute("color"));
+        width = wxAtof(node->GetAttribute("width"));
+        points = {};
+
+        for (wxXmlNode *pointNode = node->GetChildren(); pointNode; pointNode = pointNode->GetNext())
+        {
+            if (pointNode->GetName() != "Point")
+                continue;
+
+            points.push_back(wxPoint2DDouble(wxAtof(pointNode->GetAttribute("x")),
+                                             wxAtof(pointNode->GetAttribute("y"))));
+        }
+    }
+
+    static wxString SerializationNodeType()
+    {
+        return "Path";
+    }
 };

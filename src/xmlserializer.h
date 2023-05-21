@@ -7,7 +7,10 @@
 
 #include <memory>
 
+#include "shapes/shape.h"
 #include "shapes/path.h"
+#include "shapes/rect.h"
+#include "shapes/circle.h"
 
 struct XmlSerializer
 {
@@ -16,29 +19,16 @@ struct XmlSerializer
         wxFileSystem::AddHandler(new wxZipFSHandler);
     }
 
-    wxXmlDocument SerializePaths(const std::vector<Path> &paths)
+    wxXmlDocument SerializeShapes(const std::vector<std::unique_ptr<Shape>> &objects)
     {
         wxXmlDocument doc;
 
         wxXmlNode *docNode = new wxXmlNode(wxXML_ELEMENT_NODE, "PaintDocument");
-        docNode->AddAttribute("version", "1.1");
+        docNode->AddAttribute("version", "1.2");
 
-        for (const auto &path : paths)
+        for (const auto &obj : objects)
         {
-            wxXmlNode *pathNode = new wxXmlNode(wxXML_ELEMENT_NODE, "Object");
-            pathNode->AddAttribute("type", "Path");
-            pathNode->AddAttribute("color", path.color.GetAsString(wxC2S_HTML_SYNTAX));
-            pathNode->AddAttribute("width", wxString::FromDouble(path.width));
-
-            for (const auto &point : path.points)
-            {
-                wxXmlNode *pointNode = new wxXmlNode(wxXML_ELEMENT_NODE, "Point");
-                pointNode->AddAttribute("x", wxString::FromDouble(point.m_x));
-                pointNode->AddAttribute("y", wxString::FromDouble(point.m_y));
-                pathNode->AddChild(pointNode);
-            }
-
-            docNode->AddChild(pathNode);
+            docNode->AddChild(obj->Serialize());
         }
 
         doc.SetRoot(docNode);
@@ -46,37 +36,41 @@ struct XmlSerializer
         return doc;
     }
 
-    std::vector<Path> DeserializePaths(const wxXmlDocument &doc)
+    std::vector<std::unique_ptr<Shape>> DeserializeShapes(const wxXmlDocument &doc)
     {
         wxXmlNode *root = doc.GetRoot();
 
-        std::vector<Path> squiggles;
+        std::vector<std::unique_ptr<Shape>> objects;
 
         for (wxXmlNode *node = root->GetChildren(); node; node = node->GetNext())
         {
             if (node->GetName() != "Object")
                 continue;
 
-            if (node->GetAttribute("type") == "Path")
+            if (node->GetAttribute("type") == Path::SerializationNodeType())
             {
                 Path squiggle;
-                squiggle.color = wxColor(node->GetAttribute("color"));
-                squiggle.width = wxAtof(node->GetAttribute("width"));
+                squiggle.Deserialize(node);
 
-                for (wxXmlNode *pointNode = node->GetChildren(); pointNode; pointNode = pointNode->GetNext())
-                {
-                    if (pointNode->GetName() != "Point")
-                        continue;
+                objects.emplace_back(std::make_unique<Path>(squiggle));
+            }
+            else if (node->GetAttribute("type") == Rect::SerializationNodeType())
+            {
+                Rect rect;
+                rect.Deserialize(node);
 
-                    squiggle.points.push_back(wxPoint2DDouble(wxAtof(pointNode->GetAttribute("x")),
-                                                              wxAtof(pointNode->GetAttribute("y"))));
-                }
+                objects.emplace_back(std::make_unique<Rect>(rect));
+            }
+            else if (node->GetAttribute("type") == Circle::SerializationNodeType())
+            {
+                Circle circle;
+                circle.Deserialize(node);
 
-                squiggles.push_back(squiggle);
+                objects.emplace_back(std::make_unique<Circle>(circle));
             }
         }
 
-        return squiggles;
+        return objects;
     }
 
     void CompressXml(const wxXmlDocument &doc, wxOutputStream &outStream)
