@@ -4,12 +4,12 @@
 
 #include <string>
 #include <vector>
-#include <chrono>
 
 #include "myapp.h"
 
 #include "panes/colorpane.h"
 #include "panes/pensizepane.h"
+#include "panes/toolselectionpane.h"
 
 #include "drawingcanvas.h"
 #include "drawingdocument.h"
@@ -26,20 +26,28 @@ public:
     void SetupCanvasForView(DrawingView *view);
 
 private:
-    wxPanel *BuildControlsPanel(wxWindow *parent);
+    wxScrolled<wxPanel> *BuildControlsPanel(wxWindow *parent);
 
     void SetupColorPanes(wxWindow *parent, wxSizer *sizer);
     void SetupPenPanes(wxWindow *parent, wxSizer *sizer);
+    void SetupToolPanes(wxWindow *parent, wxSizer *sizer);
 
     void SelectColorPane(ColorPane *pane);
     void SelectPenPane(PenSizePane *pane);
+    void SelectToolPane(ToolSelectionPane *pane);
 
     void BuildMenuBar();
 
     std::vector<ColorPane *> colorPanes{};
     std::vector<PenSizePane *> penPanes{};
+    std::vector<ToolSelectionPane *> toolPanes{};
 
     wxPanel *docPanel;
+    wxScrolled<wxPanel> *controlsPanel;
+
+    // For hiding/showing pen width controls.
+    // Can't use a sizer because it will mess up the layout: https://github.com/wxWidgets/wxWidgets/issues/23352
+    std::pair<wxStaticText *, wxSizer *> penWidthControls;
 
     const std::vector<std::string> niceColors = {"#000000", "#ffffff", "#fd7f6f",
                                                  "#7eb0d5", "#b2e061", "#bd7ebe",
@@ -131,34 +139,54 @@ void MyFrame::SetupPenPanes(wxWindow *parent, wxSizer *sizer)
     }
 }
 
-wxPanel *MyFrame::BuildControlsPanel(wxWindow *parent)
+void MyFrame::SetupToolPanes(wxWindow *parent, wxSizer *sizer)
 {
-    auto controlsPanel = new wxScrolled<wxPanel>(parent, wxID_ANY);
-    controlsPanel->SetScrollRate(0, FromDIP(10));
+    auto penPane = new ToolSelectionPane(parent, wxID_ANY, ToolType::Pen);
+    toolPanes.push_back(penPane);
+
+    auto rectPane = new ToolSelectionPane(parent, wxID_ANY, ToolType::Rect);
+    toolPanes.push_back(rectPane);
+
+    auto circlePane = new ToolSelectionPane(parent, wxID_ANY, ToolType::Circle);
+    toolPanes.push_back(circlePane);
+
+    for (const auto &pane : toolPanes)
+    {
+        pane->Bind(wxEVT_LEFT_DOWN, [this, pane](wxMouseEvent &event)
+                   { SelectToolPane(pane); });
+        sizer->Add(pane, 0, wxRIGHT | wxBOTTOM, FromDIP(5));
+    }
+}
+
+wxScrolled<wxPanel> *MyFrame::BuildControlsPanel(wxWindow *parent)
+{
+    auto panel = new wxScrolled<wxPanel>(parent, wxID_ANY);
+    panel->SetScrollRate(0, FromDIP(10));
 
     bool isDark = wxSystemSettings::GetAppearance().IsDark();
-    controlsPanel->SetBackgroundColour(wxColour(isDark ? darkBackground : lightBackground));
+    panel->SetBackgroundColour(wxColour(isDark ? darkBackground : lightBackground));
 
     auto mainSizer = new wxBoxSizer(wxVERTICAL);
 
-    auto text = new wxStaticText(controlsPanel, wxID_ANY, "Colors");
-    mainSizer->Add(text, 0, wxALL, FromDIP(5));
+    auto addGroup = [this, panel, mainSizer](const wxString &title, const auto factoryFunction)
+    {
+        auto text = new wxStaticText(panel, wxID_ANY, title);
+        mainSizer->Add(text, 0, wxALL, FromDIP(5));
 
-    auto colorPaneSizer = new wxWrapSizer(wxHORIZONTAL);
-    SetupColorPanes(controlsPanel, colorPaneSizer);
+        auto wrapSizer = new wxWrapSizer(wxHORIZONTAL);
+        (this->*factoryFunction)(panel, wrapSizer);
+        mainSizer->Add(wrapSizer, 0, wxALL, FromDIP(5));
 
-    mainSizer->Add(colorPaneSizer, 0, wxALL, FromDIP(5));
+        penWidthControls = {text, wrapSizer};
+    };
 
-    text = new wxStaticText(controlsPanel, wxID_ANY, "Pens");
-    mainSizer->Add(text, 0, wxALL, FromDIP(5));
+    addGroup("Color", &MyFrame::SetupColorPanes);
+    addGroup("Tool", &MyFrame::SetupToolPanes);
+    addGroup("Width", &MyFrame::SetupPenPanes);
 
-    auto penPaneSizer = new wxWrapSizer(wxHORIZONTAL);
-    SetupPenPanes(controlsPanel, penPaneSizer);
-    mainSizer->Add(penPaneSizer, 0, wxALL, FromDIP(5));
+    panel->SetSizer(mainSizer);
 
-    controlsPanel->SetSizer(mainSizer);
-
-    return controlsPanel;
+    return panel;
 }
 
 MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxString &title,
@@ -167,20 +195,21 @@ MyFrame::MyFrame(wxDocManager *manager, wxFrame *frame, wxWindowID id, const wxS
 {
     wxSplitterWindow *splitter = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_BORDER | wxSP_LIVE_UPDATE);
 
-    splitter->SetMinimumPaneSize(FromDIP(150));
+    splitter->SetMinimumPaneSize(FromDIP(220));
 
-    auto controlsPanel = BuildControlsPanel(splitter);
+    controlsPanel = BuildControlsPanel(splitter);
     docPanel = new wxPanel(splitter, wxID_ANY);
     docPanel->SetSizer(new wxBoxSizer(wxVERTICAL));
 
     splitter->SplitVertically(controlsPanel, docPanel);
-    splitter->SetSashPosition(FromDIP(220));
+    splitter->SetSashPosition(FromDIP(240));
 
-    this->SetSize(FromDIP(800), FromDIP(500));
-    this->SetMinSize({FromDIP(400), FromDIP(200)});
+    this->SetSize(FromDIP(800), FromDIP(600));
+    this->SetMinSize({FromDIP(400), FromDIP(500)});
 
     SelectColorPane(colorPanes[0]);
     SelectPenPane(penPanes[0]);
+    SelectToolPane(toolPanes[0]);
 
     BuildMenuBar();
 }
@@ -205,6 +234,30 @@ void MyFrame::SelectPenPane(PenSizePane *pane)
     }
 
     MyApp::GetToolSettings().currentWidth = pane->penWidth;
+}
+
+void MyFrame::SelectToolPane(ToolSelectionPane *pane)
+{
+    for (auto toolPane : toolPanes)
+    {
+        toolPane->selected = (toolPane == pane);
+        toolPane->Refresh();
+    }
+
+    MyApp::GetToolSettings().currentTool = pane->toolType;
+
+    if (pane->toolType == ToolType::Pen)
+    {
+        controlsPanel->GetSizer()->Show(penWidthControls.first);
+        controlsPanel->GetSizer()->Show(penWidthControls.second);
+    }
+    else
+    {
+        controlsPanel->GetSizer()->Hide(penWidthControls.first);
+        controlsPanel->GetSizer()->Hide(penWidthControls.second);
+    }
+
+    controlsPanel->Layout();
 }
 
 void MyFrame::BuildMenuBar()
