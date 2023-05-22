@@ -5,7 +5,7 @@
             "name": "(lldb-mac) Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/subprojects/Build/wx_visitor_tutorial_WIP_core/main.app",
+            "program": "${workspaceFolder}/build/subprojects/Build/wx_visitor_tutorial_core/main.app",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build with CMake"
         },
@@ -13,7 +13,7 @@
             "name": "(lldb-linux) Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/build/subprojects/Build/wx_visitor_tutorial_WIP_core/main",
+            "program": "${workspaceFolder}/build/subprojects/Build/wx_visitor_tutorial_core/main",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build with CMake"
         },
@@ -21,7 +21,7 @@
             "name": "(msvc) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\build\\subprojects\\Build\\wx_visitor_tutorial_WIP_core\\Debug\\main.exe",
+            "program": "${workspaceFolder}\\build\\subprojects\\Build\\wx_visitor_tutorial_core\\Debug\\main.exe",
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build with CMake"
         }

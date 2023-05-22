@@ -1,4 +1,4 @@
-# wx_visitor_tutorial_WIP
+# wx_visitor_tutorial
 
 A template for multiplatform wxWidgets projects using CMake
 
@@ -23,7 +23,7 @@ cmake -S. -Bbuild
 cmake --build build
 ```
 
-This will create a directory named `build` and create all build artifacts there. The main executable can be found in the `build/subprojects/Build/wx_visitor_tutorial_WIP_core` folder.
+This will create a directory named `build` and create all build artifacts there. The main executable can be found in the `build/subprojects/Build/wx_visitor_tutorial_core` folder.
 
 ## Using as a Template (Linux/Mac)
 
@@ -33,7 +33,7 @@ Use the provided `copy_to_project.sh` script to create another project from the 
 ./copy_to_project.sh directory project_name
 ```
 
-This will create a copy of the template's directory structure in `directory`, renaming `wx_visitor_tutorial_WIP` to the provided `project_name`.
+This will create a copy of the template's directory structure in `directory`, renaming `wx_visitor_tutorial` to the provided `project_name`.
 
 ## Notes
 

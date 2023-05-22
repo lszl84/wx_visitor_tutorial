@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.justdevtutorials.wx_visitor_tutorial_WIP</string>
+    <string>com.justdevtutorials.wx_visitor_tutorial</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
     <key>CFBundlePackageType</key>

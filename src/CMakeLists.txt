@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
-project(wx_visitor_tutorial_WIP_core LANGUAGES CXX)
+project(wx_visitor_tutorial_core LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
