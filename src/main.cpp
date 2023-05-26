@@ -141,20 +141,15 @@ void MyFrame::SetupPenPanes(wxWindow *parent, wxSizer *sizer)
 
 void MyFrame::SetupToolPanes(wxWindow *parent, wxSizer *sizer)
 {
-    auto penPane = new ToolSelectionPane(parent, wxID_ANY, ToolType::Pen);
-    toolPanes.push_back(penPane);
-
-    auto rectPane = new ToolSelectionPane(parent, wxID_ANY, ToolType::Rect);
-    toolPanes.push_back(rectPane);
-
-    auto circlePane = new ToolSelectionPane(parent, wxID_ANY, ToolType::Circle);
-    toolPanes.push_back(circlePane);
-
-    for (const auto &pane : toolPanes)
+    for (const auto toolType : {ToolType::Pen, ToolType::Rect, ToolType::Circle})
     {
-        pane->Bind(wxEVT_LEFT_DOWN, [this, pane](wxMouseEvent &event)
-                   { SelectToolPane(pane); });
-        sizer->Add(pane, 0, wxRIGHT | wxBOTTOM, FromDIP(5));
+        auto toolPane = new ToolSelectionPane(parent, wxID_ANY, toolType);
+
+        toolPane->Bind(wxEVT_LEFT_DOWN, [this, toolPane](wxMouseEvent &event)
+                       { SelectToolPane(toolPane); });
+
+        toolPanes.push_back(toolPane);
+        sizer->Add(toolPane, 0, wxRIGHT | wxBOTTOM, FromDIP(5));
     }
 }
 
