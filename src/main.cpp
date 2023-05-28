@@ -46,8 +46,9 @@ private:
     wxScrolled<wxPanel> *controlsPanel;
 
     // For hiding/showing pen width controls.
-    // Can't use a sizer because it will mess up the layout: https://github.com/wxWidgets/wxWidgets/issues/23352
-    std::pair<wxStaticText *, wxSizer *> penWidthControls;
+    // Can't use a single sizer because it will mess up the layout: https://github.com/wxWidgets/wxWidgets/issues/23352
+    wxStaticText *penWidthLabel;
+    wxSizer *penWidthPanesSizer;
 
     const std::vector<std::string> niceColors = {"#000000", "#ffffff", "#fd7f6f",
                                                  "#7eb0d5", "#b2e061", "#bd7ebe",
@@ -172,7 +173,8 @@ wxScrolled<wxPanel> *MyFrame::BuildControlsPanel(wxWindow *parent)
         (this->*factoryFunction)(panel, wrapSizer);
         mainSizer->Add(wrapSizer, 0, wxALL, FromDIP(5));
 
-        penWidthControls = {text, wrapSizer};
+        penWidthLabel = text;
+        penWidthPanesSizer = wrapSizer;
     };
 
     addGroup("Color", &MyFrame::SetupColorPanes);
@@ -243,13 +245,13 @@ void MyFrame::SelectToolPane(ToolSelectionPane *pane)
 
     if (pane->toolType == ToolType::Pen)
     {
-        controlsPanel->GetSizer()->Show(penWidthControls.first);
-        controlsPanel->GetSizer()->Show(penWidthControls.second);
+        controlsPanel->GetSizer()->Show(penWidthLabel);
+        controlsPanel->GetSizer()->Show(penWidthPanesSizer);
     }
     else
     {
-        controlsPanel->GetSizer()->Hide(penWidthControls.first);
-        controlsPanel->GetSizer()->Hide(penWidthControls.second);
+        controlsPanel->GetSizer()->Hide(penWidthLabel);
+        controlsPanel->GetSizer()->Hide(penWidthPanesSizer);
     }
 
     controlsPanel->Layout();
