@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <tuple>
 
 #include "myapp.h"
 
@@ -173,13 +174,13 @@ wxScrolled<wxPanel> *MyFrame::BuildControlsPanel(wxWindow *parent)
         (this->*factoryFunction)(panel, wrapSizer);
         mainSizer->Add(wrapSizer, 0, wxALL, FromDIP(5));
 
-        penWidthLabel = text;
-        penWidthPanesSizer = wrapSizer;
+        return std::make_pair(text, wrapSizer);
     };
 
     addGroup("Color", &MyFrame::SetupColorPanes);
     addGroup("Tool", &MyFrame::SetupToolPanes);
-    addGroup("Width", &MyFrame::SetupPenPanes);
+
+    std::tie(penWidthLabel, penWidthPanesSizer) = addGroup("Width", &MyFrame::SetupPenPanes);
 
     panel->SetSizer(mainSizer);
 
